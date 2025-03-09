@@ -4,11 +4,13 @@ In this project, I want to demonstrate a simple example of optimizing for the we
 
 Here, I optimize for the values of filter operator ($f^x$), given an image $I$ and its edges $I^{edge}$ using the equations below:
 
-$$
+<!-- $$
 I^{x}_{(i, j)} = \sum_{k=0}^{2} \sum_{l=0}^{2} I_{(i+k-1, j+l-1)} \cdot f^x_{(k, l)}\\
 I^{y}_{(i, j)} = \sum_{k=0}^{2} \sum_{l=0}^{2} I_{(i+k-1, j+l-1)} \cdot f^y_{(k, l)}\\
 I^{edge} = \sqrt{I^x * I^x + I^y * I^y}
 $$
+Since my equations above aren't rendering correctly on github, here's a screenshot :  -->
+![image](assets/equations.png) 
 
 ## Why this problem?
 Applying the Sobel operator on an image for edge detection is basically a 2D convolution operation. Optimizing for the operator is the equivalent for "learning" a Conv2D filter (or learning the weights of a neural network which is composed of a single 2D convolution filter) - which is what convolution neural networks do! Instead of focusing on big & complex problems, I picked this simpler case since it is illustrative of the machinery that goes into most "learning" based problems. My aim in this work is to explore various implementations (ranging from simpler ones using `torch` to complex customized vectorized C++ implementations) of learning the weights of a 2D Conv operator and try to understand & explain the observations.
@@ -16,7 +18,7 @@ Applying the Sobel operator on an image for edge detection is basically a 2D con
 An example of an image (in grayscale) and its edges is shown below ([reference link](https://docs.scipy.org/doc/scipy/reference/generated/scipy.ndimage.sobel.html)):
 ![image](assets/Example.png)
 
-The Sobel Operators used to obtain the above result are $f^x = \begin{bmatrix} 
+<!-- The Sobel Operators used to obtain the above result are $f^x = \begin{bmatrix} 
 -1 & 0 & 1 \\
 -2 & 0 & 2 \\
 -1 & 0 & 1
@@ -24,7 +26,18 @@ The Sobel Operators used to obtain the above result are $f^x = \begin{bmatrix}
 -1 & -2 & -1 \\
 0 & 0 & 0 \\
 1 & 2 & 1
-\end{bmatrix}$.
+\end{bmatrix}$. -->
+
+The Sobel Operators used to obtain the above result are 
+```
+f^x =   -1 0 1
+        -2 0 2
+        -1 0 1
+and f^y = (f^x)^T 
+        = -1 -2 -1
+           0  0  0
+           1  2  1
+```
 
 I try to answer 2 questions:
 

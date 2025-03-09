@@ -4,12 +4,15 @@ In this project, I want to demonstrate a simple example of optimizing for the we
 
 Here, I optimize for the values of filter operator ($f^x$), given an image $I$ and its edges $I^{edge}$ using the equations below:
 $$ 
-\begin{align}
-I^{x}_{(i, j)} &= \Sigma_{k=0}^{2} \Sigma_{l=0}^{2} I_{(i+k-1, j+l-1)} * f^x_{(k, l)} \\
-I^{y}_{(i, j)} &= \Sigma_{k=0}^{2} \Sigma_{l=0}^{2} I_{(i+k-1, j+l-1)} * f^y_{(k, l)}\\
-I^{edge} &= \sqrt{Ix*Ix + Iy*Iy}
-\end{align}
+
+I^{x}_{(i, j)} = \Sigma_{k=0}^{2} \Sigma_{l=0}^{2} I_{(i+k-1, j+l-1)} * f^x_{(k, l)} \\
+I^{y}_{(i, j)} = \Sigma_{k=0}^{2} \Sigma_{l=0}^{2} I_{(i+k-1, j+l-1)} * f^y_{(k, l)}\\
+I^{edge} = \sqrt{Ix*Ix + Iy*Iy}
+
 $$
+
+## Why this problem?
+Applying the Sobel operator on an image for edge detection is basically a 2D convolution operation. Optimizing for the operator is the equivalent for "learning" a Conv2D filter (or learning the weights of a neural network which is composed of a single 2D convolution filter) - which is what convolution neural networks do! Instead of focusing on big & complex problems, I picked this simpler case since it is illustrative of the machinery that goes into most "learning" based problems. My aim in this work is to explore various implementations (ranging from simpler ones using `torch` to complex customized vectorized C++ implementations) of learning the weights of a 2D Conv operator and try to understand & explain the observations.
 
 An example of an image (in grayscale) and its edges is shown below:
 ![image](assets/Example.png)
@@ -26,11 +29,12 @@ I try to answer 2 questions:
 
     * Convergence of the custom conv2D warp kernel is faster when it accumulates the stencil convolutions into `wp.float64` as opposed to `wp.float32`.
 
-    * The optimization is summarized below 
+    * The optimization is summarized below (L1 loss is the loss between the predicted edge image and the ground truth edge image.) 
     ```
-        Init parameters = tensor([[[[ 0.1879,  0.2403, -0.0151],
-          [-0.0489,  0.0236, -0.1757],
-          [ 0.0140, -0.3393,  0.1610]]]])
+        fx (initialization) = 
+            tensor([[[[ 0.1879,  0.2403, -0.0151],
+            [-0.0489,  0.0236, -0.1757],
+            [ 0.0140, -0.3393,  0.1610]]]])
         Iter = 99 L1 Loss = 0.047818105667829514
         Iter = 199 L1 Loss = 0.012268793769180775
         Iter = 299 L1 Loss = 0.0042396001517772675

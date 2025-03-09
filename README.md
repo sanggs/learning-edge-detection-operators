@@ -14,10 +14,10 @@ $$
 ## Why this problem?
 Applying the Sobel operator on an image for edge detection is basically a 2D convolution operation. Optimizing for the operator is the equivalent for "learning" a Conv2D filter (or learning the weights of a neural network which is composed of a single 2D convolution filter) - which is what convolution neural networks do! Instead of focusing on big & complex problems, I picked this simpler case since it is illustrative of the machinery that goes into most "learning" based problems. My aim in this work is to explore various implementations (ranging from simpler ones using `torch` to complex customized vectorized C++ implementations) of learning the weights of a 2D Conv operator and try to understand & explain the observations.
 
-An example of an image (in grayscale) and its edges is shown below:
+An example of an image (in grayscale) and its edges is shown below ([reference link](https://docs.scipy.org/doc/scipy/reference/generated/scipy.ndimage.sobel.html)):
 ![image](assets/Example.png)
 
-The Sobel Operators are given by $f^x= \begin{pmatrix} -1 & 0 & 1 \\ -2 & 0 & 2 \\ -1 & 0 & 1 \end{pmatrix}$ and $f^y = (f^x)^T$.
+The Sobel Operators used to obtain the above result are $f^x= \begin{pmatrix} -1 & 0 & 1 \\ -2 & 0 & 2 \\ -1 & 0 & 1 \end{pmatrix}$ and $f^y = (f^x)^T$.
 
 I try to answer 2 questions:
 

@@ -3,12 +3,11 @@
 In this project, I want to demonstrate a simple example of optimizing for the well-known [Sobel Operator](https://en.wikipedia.org/wiki/Sobel_operator) for edge detection. Edge detection is a very well known classical problem in Computer Vision. Given an image, the edges in the image can be obtained by applying the Sobel operator to each pixel of the image.
 
 Here, I optimize for the values of filter operator ($f^x$), given an image $I$ and its edges $I^{edge}$ using the equations below:
-$$ 
 
-I^{x}_{(i, j)} = \Sigma_{k=0}^{2} \Sigma_{l=0}^{2} I_{(i+k-1, j+l-1)} * f^x_{(k, l)} \\
-I^{y}_{(i, j)} = \Sigma_{k=0}^{2} \Sigma_{l=0}^{2} I_{(i+k-1, j+l-1)} * f^y_{(k, l)}\\
-I^{edge} = \sqrt{Ix*Ix + Iy*Iy}
-
+$$
+I^{x}_{(i, j)} = \sum_{k=0}^{2} \sum_{l=0}^{2} I_{(i+k-1, j+l-1)} \cdot f^x_{(k, l)}\\
+I^{y}_{(i, j)} = \sum_{k=0}^{2} \sum_{l=0}^{2} I_{(i+k-1, j+l-1)} \cdot f^y_{(k, l)}\\
+I^{edge} = \sqrt{I^x * I^x + I^y * I^y}
 $$
 
 ## Why this problem?
@@ -17,7 +16,15 @@ Applying the Sobel operator on an image for edge detection is basically a 2D con
 An example of an image (in grayscale) and its edges is shown below ([reference link](https://docs.scipy.org/doc/scipy/reference/generated/scipy.ndimage.sobel.html)):
 ![image](assets/Example.png)
 
-The Sobel Operators used to obtain the above result are $f^x= \begin{pmatrix} -1 & 0 & 1 \\ -2 & 0 & 2 \\ -1 & 0 & 1 \end{pmatrix}$ and $f^y = (f^x)^T$.
+The Sobel Operators used to obtain the above result are $f^x = \begin{bmatrix} 
+-1 & 0 & 1 \\
+-2 & 0 & 2 \\
+-1 & 0 & 1
+\end{bmatrix}$ and $f^y = (f^x)^T = \begin{bmatrix}
+-1 & -2 & -1 \\
+0 & 0 & 0 \\
+1 & 2 & 1
+\end{bmatrix}$.
 
 I try to answer 2 questions:
 

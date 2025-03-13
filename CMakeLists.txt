@@ -8,8 +8,14 @@ else()
 endif()
 
 find_package(Python COMPONENTS Interpreter ${DEV_MODULE} REQUIRED)
+find_package(OpenMP)
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/nanobind)
 
 nanobind_add_module(conv2d ${CMAKE_CURRENT_SOURCE_DIR}/cpp/conv2d_vanilla.cpp)
+
+if(OpenMP_CXX_FOUND)
+  message(STATUS "Linking OpenMP")
+  link_libraries(OpenMP::OpenMP_CXX)
+endif()
 

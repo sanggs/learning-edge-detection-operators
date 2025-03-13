@@ -19,13 +19,13 @@ if __name__=='__main__':
 
     image = torch.from_numpy(ascent).to(device)
     edgeImage = torch.from_numpy(magnitude).to(device)
-    print(f'Optimizing using torch model')
-    torch_filter_model = TorchEdgeFilter().to(device)
-    optimize_for_weights(image.clone(), edgeImage.clone(), torch_filter_model)
+    # print(f'Optimizing using torch model')
+    # torch_filter_model = TorchEdgeFilter().to(device)
+    # optimize_for_weights(image.clone(), edgeImage.clone(), torch_filter_model)
     
-    print(f'Optimizing using warp model')
-    warp_filter_model = WarpEdgeFilter().to(device)
-    optimize_for_weights(image.clone(), edgeImage.clone(), warp_filter_model)
+    # print(f'Optimizing using warp model')
+    # warp_filter_model = WarpEdgeFilter().to(device)
+    # optimize_for_weights(image.clone(), edgeImage.clone(), warp_filter_model)
 
     print(f'Optimizing using cpp vanilla model')
     assert(device == 'cpu')

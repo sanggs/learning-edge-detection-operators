@@ -1,5 +1,6 @@
 #include "conv2d_vanilla.h"
 #include <cstring>
+#include <omp.h>
 
 namespace nb = nanobind;
 
@@ -20,14 +21,16 @@ TensorDType pad2d(
     float* output = (float*) std::malloc(output_size);
     memset(output, 0, output_size);
     
-    for (int i = 0; i < px; i++) {
-        for (int j = 0; j < py; j++) {
-            assert(i + pad_width < nx);
-            assert(j + pad_width < ny);
-            int lidx = (i + pad_width) * ny + (j + pad_width);
-            assert(lidx < (nx * ny));
-            output[lidx] = img(i, j);
-        }
+    const int pixels = (int)(px * py);
+    #pragma omp parallel for private(i, j, lidx)
+    for (int p = 0; p < pixels; p++) {
+        const int i = (int)p/py;
+        const int j = (int)p%py;
+        assert(i + pad_width < nx);
+        assert(j + pad_width < ny);
+        int lidx = (i + pad_width) * ny + (j + pad_width);
+        assert(lidx < (nx * ny));
+        output[lidx] = img(i, j);
     }
 
     return nb::ndarray<float, nb::pytorch, nb::shape<-1, -1>>(output, {(size_t)nx, (size_t)ny});
@@ -70,21 +73,23 @@ TensorDType conv2d_vanilla(
     }
     assert(fe > 0);
 
-    for (int i = 0; i < nx; i++) {
-        for (int j = 0; j < ny; j++) {
-            double val_x = 0.0;
-            double val_y = 0.0;
-            for (int k = -fe; k < fe+1; k++) {
-                for (int l = -fe; l < fe+1; l++) {
-                    val_y += (double)filter(k+fe, l+fe) * (double)padded_in(i+k+fe, j+l+fe);
-                    val_x += (double)filter(l+fe, k+fe) * (double)padded_in(i+k+fe, j+l+fe);
-                }
+    const int pixels = (int)(nx * ny);
+    #pragma omp parallel for private(i, j, val_x, val_y, lidx)
+    for (int p = 0; p < pixels; p++) {
+        const int i = (int)p/ny;
+        const int j = (int)p%ny;
+        double val_x = 0.0;
+        double val_y = 0.0;
+        for (int k = -fe; k < fe+1; k++) {
+            for (int l = -fe; l < fe+1; l++) {
+                val_y += (double)filter(k+fe, l+fe) * (double)padded_in(i+k+fe, j+l+fe);
+                val_x += (double)filter(l+fe, k+fe) * (double)padded_in(i+k+fe, j+l+fe);
             }
-            int lidx = i * ny + j;
-            out_y(i, j) = (float)val_y;
-            out_x(i, j) = (float)val_x;
-            output[lidx] = (float)(val_x * val_x + val_y * val_y);
         }
+        int lidx = i * ny + j;
+        out_y(i, j) = (float)val_y;
+        out_x(i, j) = (float)val_x;
+        output[lidx] = (float)(val_x * val_x + val_y * val_y);
     }
     
     return nb::ndarray<float, nb::pytorch, nb::shape<-1, -1>>(output, {(size_t)nx, (size_t)ny});
@@ -122,22 +127,27 @@ TensorDType conv2d_gradient_vanilla(
     }
     memset(grad_filter, 0, grad_filter_size);
     
-    for (int i = 0; i < nx; i++) {
-        for (int j = 0; j < ny; j++) {
-            for (int k = -fe; k < fe+1; k++) {
-                for (int l = -fe; l < fe+1; l++) {
-                    int lidx_y = (k+fe) * f + l+fe;
-                    int lidx_x = (l+fe) * f + k+fe;
-                    
-                    // Compute gradient for both x and y components
-                    double val_x = 2.0 * (double)padded_in(i+k+fe, j+l+fe) * (double)out_x(i, j) * (double)grad_output(i, j);
-                    double val_y = 2.0 * (double)padded_in(i+k+fe, j+l+fe) * (double)out_y(i, j) * (double)grad_output(i, j);
-                    
-                    // Accumulate gradients (note the different indices for x and y)
-                    grad_filter[lidx_x] += (float)(val_x);
-                    grad_filter[lidx_y] += (float)(val_y);
-                }
-            }   
+    const int pixels = (int)(nx * ny);
+    #pragma omp parallel for private(i, j, val_x, val_y, lidx_x, lidx_y)
+    for (int p = 0; p < pixels; p++) {
+        const int i = (int)p/ny;
+        const int j = (int)p%ny;
+        for (int k = -fe; k < fe+1; k++) {
+            for (int l = -fe; l < fe+1; l++) {
+                int lidx_y = (k+fe) * f + l+fe;
+                int lidx_x = (l+fe) * f + k+fe;
+                
+                // Compute gradient for both x and y components
+                double val_x = 2.0 * (double)padded_in(i+k+fe, j+l+fe) * (double)out_x(i, j) * (double)grad_output(i, j);
+                double val_y = 2.0 * (double)padded_in(i+k+fe, j+l+fe) * (double)out_y(i, j) * (double)grad_output(i, j);
+                
+                // Accumulate gradients (note the different indices for x and y)
+                #pragma omp atomic
+                grad_filter[lidx_x] += (float)(val_x);
+                
+                #pragma omp atomic
+                grad_filter[lidx_y] += (float)(val_y);
+            }
         }
     }
     return nb::ndarray<float, nb::pytorch, nb::shape<-1, -1>>((void*)grad_filter,

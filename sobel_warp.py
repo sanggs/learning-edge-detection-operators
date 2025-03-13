@@ -37,9 +37,10 @@ class EvalEdgeFilter(torch.autograd.Function):
         ctx.f_in        = wp.from_torch(f_in, dtype=wp.float32, requires_grad=True)
         
         # allocate output
-        ctx.padded_x_in = wp.zeros(
-            (nx+2, ny+2), dtype=wp.float32, requires_grad=False, device=ctx.wp_device)
-        ctx.out         = wp.zeros((ctx.nx, ctx.ny), dtype=wp.float32, requires_grad=True)
+        ctx.padded_x_in = wp.zeros((nx+2, ny+2), dtype=wp.float32, 
+                                   requires_grad=False, device=ctx.wp_device)
+        ctx.out         = wp.zeros((ctx.nx, ctx.ny), dtype=wp.float32, 
+                                   requires_grad=True, device=ctx.wp_device)
 
         wp.launch(
             kernel  = pad_array_kernel,
@@ -77,52 +78,3 @@ class EvalEdgeFilter(torch.autograd.Function):
         # return adjoint w.r.t. inputs
         return (None, wp.to_torch(ctx.f_in.grad))
 
-class EdgeFilter(torch.nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.fx  = torch.nn.Parameter(torch.zeros((3, 3), dtype=torch.float32))
-        self.init_parameters()
-
-    def init_parameters(self):
-        with torch.no_grad():
-            torch.nn.init.kaiming_uniform_(self.fx, a=np.sqrt(3))
-
-    def forward(self, x):
-        Iedge = EvalEdgeFilter.apply(x, self.fx)
-        return Iedge
-
-    def computeLoss(self, pred, gt):
-        return torch.nn.functional.l1_loss(pred, gt)
-
-def optimize_for_weights(
-        image : torch.Tensor, edge_gt : torch.Tensor, filter_model : EdgeFilter
-    ):
-    print(f'Init parameters = {filter_model.fx.detach()}')
-    optimizer = torch.optim.Adam(filter_model.parameters(), 1e-2)
-    for i in range(1000):
-        optimizer.zero_grad()
-        edge_pd = filter_model.forward(image)
-        loss = filter_model.computeLoss(edge_pd, edge_gt)
-        loss.backward()
-        
-        optimizer.step()
-        if ((i+1) % 1 == 0):
-            print(f'Iter = {i} Loss = {loss.detach()}')
-    print(f'Optimized parameters = {filter_model.fx.detach()}')
-
-if __name__=='__main__':
-    wp.init()
-    device = "cuda:0"
-    from scipy import ndimage, datasets
-    ascent = datasets.ascent().astype('float32')
-    ascent = ascent / 255.0
-
-    sobel_h = ndimage.sobel(ascent, 0, mode='constant')  # horizontal gradient
-    sobel_v = ndimage.sobel(ascent, 1, mode='constant')  # vertical gradient
-    magnitude = sobel_h**2 + sobel_v**2
-
-    image = torch.from_numpy(ascent).to(device)
-    edgeImage = torch.from_numpy(magnitude).to(device)
-    filter_model = EdgeFilter().to(device)
-
-    optimize_for_weights(image, edgeImage, filter_model)

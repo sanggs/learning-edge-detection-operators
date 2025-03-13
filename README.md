@@ -43,7 +43,7 @@ I try to answer 2 questions:
 
 1. Given the image and its edges, can we learn the edge detection filters used? Do we end up recovering filters close to the Sobel operator?
 
-    * The current implementation has 2 versions : `sobel_torch.py` is an implementation using the `torch.nn.functional.conv2d` operator. The file `sobel_warp.py` contains a [NVIDIA Warp](https://nvidia.github.io/warp/)-based kernel to compute the 2D convolution in a differentiable manner to support gradient backpropagation.
+    * The current implementation has 3 versions : All the models can be found in `sobel_models.py`. The class `TorchEdgeFilter` is an implementation using the `torch.nn.functional.conv2d` operator. The file `sobel_warp.py` contains a [NVIDIA Warp](https://nvidia.github.io/warp/)-based kernel to compute the 2D convolution in a differentiable manner to support gradient backpropagation. There is also a vanilla (basic) cpp implementation of the `conv2d` operator and its gradient in the file `sobel_cpp.py`.
     
     * Both these modules learn operators very close to the Sobel operator when initialized with [Kaiming Initialization](https://pytorch.org/docs/stable/nn.init.html#torch.nn.init.kaiming_uniform_). I noticed that initialization plays an important role in covergence (due to the presence of local minima).
 

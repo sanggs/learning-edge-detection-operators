@@ -6,7 +6,7 @@ from sobel_models import *
 from optimization_driver import optimize_for_weights
 
 if __name__=='__main__':
-    device = "cpu"
+    device = "cuda:0"
     wp.init()
     
     # Load image
@@ -19,15 +19,18 @@ if __name__=='__main__':
 
     image = torch.from_numpy(ascent).to(device)
     edgeImage = torch.from_numpy(magnitude).to(device)
-    # print(f'Optimizing using torch model')
-    # torch_filter_model = TorchEdgeFilter().to(device)
-    # optimize_for_weights(image.clone(), edgeImage.clone(), torch_filter_model)
+    print(f'Optimizing using torch model')
+    torch_filter_model = TorchEdgeFilter().to(device)
+    optimize_for_weights(image.clone(), edgeImage.clone(), torch_filter_model)
     
     # print(f'Optimizing using warp model')
     # warp_filter_model = WarpEdgeFilter().to(device)
     # optimize_for_weights(image.clone(), edgeImage.clone(), warp_filter_model)
 
     print(f'Optimizing using cpp vanilla model')
+    device = 'cpu'
+    image = image.to(device)
+    edgeImage = edgeImage.to(device)
     assert(device == 'cpu')
     cpp_filter_model = CppEdgeFilter().to(device)
     optimize_for_weights(image.clone(), edgeImage.clone(), cpp_filter_model)

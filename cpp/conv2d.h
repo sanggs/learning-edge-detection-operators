@@ -13,14 +13,14 @@ TensorDType pad2d(
     const int pad_width = 1
 );
 
-TensorDType conv2d_vanilla(
+TensorDType conv2d_forward(
     const TensorDType& padded_in,
     const TensorDType& filter,
     TensorDType& out_x,
     TensorDType& out_y
 );
 
-TensorDType conv2d_gradient_vanilla(
+TensorDType conv2d_backward(
     const TensorDType& padded_in,
     const TensorDType& filter,
     const TensorDType& out_x,

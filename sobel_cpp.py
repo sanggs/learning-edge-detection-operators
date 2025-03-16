@@ -13,7 +13,7 @@ class SobelCPPWrapper(torch.autograd.Function):
         ctx.Ix = torch.zeros((nx, ny), dtype=ctx.img.dtype, device=ctx.img.device)
         ctx.Iy = torch.zeros((nx, ny), dtype=ctx.img.dtype, device=ctx.img.device)
         ctx.Iedge = conv2d.conv2d_forward(ctx.padded_in, filter, ctx.Ix, ctx.Iy)
-        ctx.Iedge.requires_grad = True
+        # ctx.Iedge.requires_grad = True
         return ctx.Iedge
 
     @staticmethod

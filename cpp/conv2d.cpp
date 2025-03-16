@@ -2,7 +2,7 @@
 #include <cstring>
 #include <omp.h>
 
-#define USE_AVX512
+// #define USE_AVX512
 
 #ifdef USE_AVX512
 #include <immintrin.h>
@@ -27,7 +27,7 @@ TensorDType pad2d(
     float* output = (float*) std::malloc(output_size);
     memset(output, 0, output_size);
 
-    const int pixels = (int)(px * py);
+    /*const int pixels = (int)(px * py);
     #pragma omp parallel for simd
     for (int p = 0; p < pixels; p++) {
         const int i = (int)p/py;
@@ -37,6 +37,13 @@ TensorDType pad2d(
         int lidx = (i + pad_width) * ny + (j + pad_width);
         assert(lidx < (nx * ny));
         output[lidx] = img(i, j);
+    }*/
+
+    #pragma omp parallel for shared(img, output)
+    for (int i = 0; i < px; i++) {
+        std::memcpy(output + (i + pad_width) * ny + pad_width, 
+                    img.data() + i * py, 
+                    py * sizeof(float));
     }
 
     return nb::ndarray<float, nb::pytorch, nb::shape<-1, -1>>(output, {(size_t)nx, (size_t)ny});
@@ -53,7 +60,7 @@ TensorDType conv2d_forward(
 
     assert(padded_in.ndim() == 2);
     assert(filter.ndim()    == 2);
-    assert(filter.shape(0)  == filter.shape(1)); // filter is square 
+    assert(filter.shape(0)  == filter.shape(1)); // filter is square
 
     const int nx = padded_in.shape(0) - 2;
     const int ny = padded_in.shape(1) - 2;
@@ -84,6 +91,13 @@ TensorDType conv2d_forward(
 #ifdef USE_AVX512
     #pragma omp parallel
     {
+
+        __m512 filter_vecs[f][f];
+        for (int k = 0; k < f; k++)
+            for (int l = 0; l < f; l++) {
+                filter_vecs[k][l] = _mm512_set1_ps(filter(k, l));
+            }
+
         #pragma omp for
         for (int p = 0; p < pixels; p += 16) {
             
@@ -104,8 +118,8 @@ TensorDType conv2d_forward(
                 for (int k = -fe; k < fe+1; k++) {
                     for (int l = -fe; l < fe+1; l++) {
                         // Broadcast filter value
-                        __m512 filter_val_y = _mm512_set1_ps(filter(k+fe, l+fe));
-                        __m512 filter_val_x = _mm512_set1_ps(filter(l+fe, k+fe));
+                        __m512 filter_val_y = filter_vecs[k + fe][l + fe]; //_mm512_set1_ps(filter(k+fe, l+fe));
+                        __m512 filter_val_x = filter_vecs[l + fe][k + fe]; //_mm512_set1_ps(filter(l+fe, k+fe));
                         
                         // Load image pixel values
                         float input_vals[16];

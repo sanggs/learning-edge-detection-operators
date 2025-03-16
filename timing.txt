@@ -1,0 +1,37 @@
+Optimizing using cpp conv2d model
+
+===== PROFILER RESULTS =====
+-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                                                   Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg    # of Calls  
+-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                                         full_iteration         1.60%      55.382ms        75.12%        2.596s       2.623ms           990  
+                                                forward         2.28%      78.936ms        41.41%        1.431s       1.446ms           990  
+                                        SobelCPPWrapper        22.62%     781.899ms        32.16%        1.111s       1.123ms           990  
+                                               backward         3.32%     114.891ms        25.18%     870.334ms     879.125us           990  
+                                  cudaDeviceSynchronize        24.87%     859.553ms        24.87%     859.553ms     859.553ms             1  
+autograd::engine::evaluate_function: SobelCPPWrapper...         0.13%       4.593ms        12.39%     428.273ms     432.599us           990  
+                                SobelCPPWrapperBackward        11.82%     408.416ms        12.26%     423.680ms     427.960us           990  
+                                          aten::l1_loss         0.16%       5.455ms         6.50%     224.500ms     226.768us           990  
+                                         optimizer_step         0.79%      27.169ms         6.46%     223.252ms     225.507us           990  
+                               Optimizer.step#Adam.step         3.80%     131.320ms         5.67%     196.084ms     198.064us           990  
+-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  
+Self CPU time total: 3.456s
+
+Optimizing using torch model
+
+===== PROFILER RESULTS =====
+-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                                                   Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg    # of Calls  
+-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                                         full_iteration         2.01%      54.787ms       100.00%        2.727s       2.754ms           990  
+                                               backward         5.43%     148.124ms        48.61%        1.326s       1.339ms           990  
+                                                forward         4.27%     116.347ms        40.48%        1.104s       1.115ms           990  
+autograd::engine::evaluate_function: ConvolutionBack...         0.62%      16.796ms        30.64%     835.505ms     421.972us          1980  
+                                   ConvolutionBackward0         0.45%      12.298ms        30.03%     818.709ms     413.489us          1980  
+                             aten::convolution_backward        28.74%     783.731ms        29.58%     806.411ms     407.278us          1980  
+                                           aten::conv2d         0.24%       6.603ms        28.18%     768.409ms     388.085us          1980  
+                                      aten::convolution         0.68%      18.574ms        27.94%     761.806ms     384.751us          1980  
+                                     aten::_convolution         0.49%      13.344ms        27.26%     743.232ms     375.370us          1980  
+                               aten::mkldnn_convolution        25.59%     697.669ms        26.22%     714.966ms     361.094us          1980  
+-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  
+Self CPU time total: 2.727s
